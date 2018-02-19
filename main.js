@@ -6,11 +6,22 @@ class Block {
         this.timestamp = timestamp;
         this.data = data;
         this.previousHash = previousHash;
+        this.useless = 0;
         this.hash = this.calculateHash();
     }
 
     calculateHash () {
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data)).toString()
+        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.useless).toString()
+    }
+
+    mineBlock (difficulty) {
+        //search for a hash starting with zeroes equal to difficulty as a number
+        while (this.hash.substr(0, difficulty) !== Array(difficulty+1).join("0")) {
+            this.useless ++;
+            this.hash = this.calculateHash();
+        }
+
+        console.log('block mined', this.hash)
     }
 }
 
@@ -18,6 +29,7 @@ class Block {
 class Blockchain {
     constructor () {
         this.chain = [this.createGenesisBlock()];
+        this.difficulty = 5
     }
 
     createGenesisBlock () {
@@ -30,7 +42,10 @@ class Blockchain {
 
     addBlock (newBlock) {
         newBlock.previousHash = this.getLatestBlock().hash;
-        newBlock.hash = newBlock.calculateHash();
+        //newBlock.hash = newBlock.calculateHash();
+        //instead of directly calculating hash, block hash is being mined
+        newBlock.hash = newBlock.mineBlock(this.difficulty)
+        
         this.chain.push(newBlock)
     }
 
@@ -62,7 +77,9 @@ class Blockchain {
 //testing my block chain
 
 let myCoin = new Blockchain ();
+console.log('mining block 1')
 myCoin.addBlock(new Block(1, "10/01/2017", {amount: 10}));
+console.log('mining block 2')
 myCoin.addBlock(new Block(2, "12/01/2017", {amount: 4}));
 
 console.log(JSON.stringify(myCoin,null,4));
